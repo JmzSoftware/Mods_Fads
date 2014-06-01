@@ -1,1 +1,104 @@
-See documentation at modfads.org
+documentation
+
+The Tarball
+
+The mod_fadsXXX.tar.gz tarball contains:
+
+mod_fads/
+   mod_fads.c                The mod_fads module
+   README                    Pointer to this site
+   COPYING                   Gnu GPL documentation
+   cPanel/ 
+      ModFads.pm             The EasyApache cPanel/WHM custom opt mod .pm file
+      ModFads.pm.tar.gz      mod_fads.c encapsulated in a tarball for EasyApache
+   examples/
+      ad_header.txt          example header file that will insert an iframe
+      ad_footer.txt          example footer file that will insert an inframe
+      header.html            example iframe content for header
+      footer.html            example iframe content for footer
+      mod_fads_logo.png      image for header/footer
+How to Install - Non-cPanel
+
+mod_fads is straightforward to setup.  If you're using cPanel/WHM and want to build this through EasyApache, skip down to the cPanel section.
+
+1. Unpack the tarball and then install the module:
+
+tar xzf mod_fadsXXX.tar.gz
+cd mod_fads
+(your apache path)/bin/apxs -ci mod_fads.c
+The -ic flags mean "compile(c) and install(i)".  This will compile the module and install it in your Apache's modules directory. It does not create the required LoadModule and usage directives, which is what we'll do next.
+
+2. Put the following in either your httpd.conf or a file included by httpd.conf:
+
+LoadModule fads_module modules/mod_fads.so
+<IfModule fads_module>
+ModFadsHeaderAdFile "/usr/local/apache/htdocs/fads/ad_header.txt"
+ModFadsFooterAdFile "/usr/local/apache/htdocs/fads/ad_footer.txt"
+</IfModule>
+Here's what the directives mean:
+
+LoadModule is the Apache directive to, well, load the module :-) The other two directives are wrapped in an "IfModule" so that if the module fails to load for some reason, Apache doesn't become confused.
+
+ModFadsHeaderAdFile is the absolute path (not the URL) to a file containing the text that will be inserted into the header ad.  If you don't include this directive (or the file doesn't exist) then no header ad will be inserted.
+
+ModFadsFooterAdFile is the absolute path (not the URL) to a file containing the text that will be inserted into the footer ad.  If you don't include this directive (or the file doesn't exist) then no footer ad will be inserted.
+
+Obviously if you don't include at least one of ModFadsHeaderAdFile and ModFadsFooterAdfile, then no ads will be shown at all and you might as well not load mod_fads.
+
+Note that this file must be readable by the user executing the Apache process. Depending how you run apache, this could be 'nobody', 'apache', 'www-data', or the individual users on your system if you use suexec.
+
+3. Next you need to configure mod_fads for the accounts that will be using forced ads.  Set an Alias (which must be readable by all users) and then turn on the mod_fads filter for that user's directory.
+
+Alias /fads/ /usr/local/apache/htdocs/fads/
+<Directory "/home/someuser/">
+SetOutputFilter mod_fads
+</Directory>
+This will turn on mod_fads for all requests at or below /home/someuser.  Your first thought might be to use /home/someuser/public_html, which is fine too as long as you don't allow users to create subdomains anywhere in their home directory, as is common with cPanel/WHM.
+
+4. Finally, put your ads' html in the files (ModFadsAdHeaderFile and/or ModFadsAdFooterFile) and make big profits :-)
+
+Look at the examples subdirectory in the tarball.
+
+Don't forget to restart Apache.
+
+cPanel/WHM and EasyApache
+
+If you use cPanel/WHM, you can automate the building of mod_fads so that it's always built whenever you use EasyApache and its configuration persists across Apache updates. After setup, when you go into cPanel/WHM to use EasyApache, mod_fads will appear as a module you can check to include in the build. cPanel refers to this as a "custom opt mod"
+
+There is documentation from cPanel on using Custom Opt Mods.
+
+To setup mod_fads as a custom opt mod:
+
+1. Look in the tarball's cPanel directory. There you will find two files:
+
+ModFads.pm - a perl module. This is a control file for cPanel's EasyApache.
+ModFads.pm.tar.gz - a tarball that contains a subdirectory and mod_fads.c
+2. Place both these files in /var/cpanel/easy/apache/custom_opt_mods/Cpanel/Easy. If you have no existing custom opt mods, you'll need to create Cpanel/Easy under /var/cpanel/easy/apache/custom_opt_mods.
+
+3. When you go into cPanel's EasyApache build, you'll find mod_fads is a checkable choice. What happens under the covers is that EasyApache looks at ModAd.pm for config inforumation and then looks at ModAd.pm.tar.gz as the tarball to use. The apxs command to use is in the .pm file.
+
+4. The build process will not create the directives needed to load the module, configure it, and apply it. Here is how I setup the module's configuration so it's not overwritten by subsequent builds of cPanel/WHM:
+
+In /usr/local/apache/conf/includes/pre_main_2.conf:
+
+LoadModule fads_module modules/mod_fads.so
+
+ModFadsHeaderAdFile "/usr/local/apache/htdocs/fads/ad_header.txt"
+ModFadsFooterAdFile "/usr/local/apache/htdocs/fads/ad_footer.txt"
+
+In /usr/local/apache/conf/includes/post_virtualhost_2.conf:
+
+Alias /fads/ /usr/local/apache/htdocs/fads/
+
+<Directory "/home/someuser/">
+SetOutputFilter mod_fads
+</Directory>
+If you want to use mod_fads for all users, you could use
+
+<Directory "/home/someuser/">
+Turning on Debugging
+
+There is plentiful debugging code in mod_fads but it is not compiled in by default. If you want to turn on debugging, you need to recompile mod_fads like this:
+
+(your apache path)/bin/apxs -DDEBUG -ci mod_fads.c
+That will define DEBUG and you will see copious debugging output in your Apache error logs. Most of this output is only useful if you are debugging mod_fads.

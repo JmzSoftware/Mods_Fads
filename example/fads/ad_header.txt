@@ -1,0 +1,10 @@
+<!-- BEGIN mod_fads HEADER OUTPUT -->
+<iframe style="
+	border: 0px solid #ffffff;
+	margin: auto auto 5px auto;
+	display:block;
+	position:relative;
+	z-index: 2147483647;
+	visibility: visible;
+" src="/fads/header.html" width="748" height="110"></iframe>
+<!-- END mod_fads HEADER OUTPUT -->

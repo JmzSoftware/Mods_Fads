@@ -1,0 +1,8 @@
+0.3   first public release - April 9, 2013 
+      code cleanup to make it publicly presentable
+      more error-checking around directives and file handling
+
+0.2   debugging code changed to a compile-time directive
+      compile with apxs -DDEBUG -iac mod_fads.c to enable
+
+0.1 	initial release
